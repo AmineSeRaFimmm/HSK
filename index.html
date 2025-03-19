@@ -4,14 +4,14 @@
 		<title>HSK flipcard</title>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
-	<link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png">
-	<link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
-	<link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16x16.png">
-	<link rel="mask-icon" href="images/safari-pinned-tab.svg" color="#5bbad5">
-	<link rel="shortcut icon" href="images/favicon.ico">
-	<meta name="msapplication-TileColor" content="#da532c">
-	<meta name="msapplication-config" content="images/browserconfig.xml">
-	<meta name="theme-color" content="#ffffff">
+		<link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png">
+		<link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
+		<link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16x16.png">
+		<link rel="mask-icon" href="images/safari-pinned-tab.svg" color="#5bbad5">
+		<link rel="shortcut icon" href="images/favicon.ico">
+		<meta name="msapplication-TileColor" content="#da532c">
+		<meta name="msapplication-config" content="images/browserconfig.xml">
+		<meta name="theme-color" content="#ffffff">
 		<link href="css/index2.css" rel="stylesheet" type="text/css">
 		<link href="css/preloader.css" rel="stylesheet" type="text/css">
 		<script type="text/javascript" src='hsk/hsk1.js'></script>
@@ -289,14 +289,13 @@
 					learnedWords.push(card);
 				}
 			}
-			// TTS
+			// TTS - Updated to use Google Translate TTS
 			function setTTS(word) {
-				const a = `https://texttospeech.responsivevoice.org/v1/text:synthesize?text=${encodeURIComponent(word)}&lang=zh-CN&engine=g1&name=&pitch=0.5&rate=0.5&volume=1&key=PL3QYYuV&gender=female`;
-				if (tts.src != a) tts.src = a;
+				// No longer needed with Google TTS
 			}
 			function playTTS(word) {
-				setTTS(word);
-				tts.play();
+				const audio = new Audio(`https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(word)}&tl=zh-CN&client=tw-ob`);
+				audio.play();
 			}
 			// Settings
 			function resetProgress() {
@@ -673,7 +672,7 @@
 			function getCards(list,n,index=true) {
 				let set = new Set();
 				while (set.size < n) {
-					if (index) {
+					if (index) {
 						set.add(randint(0,list.length-1));
 					} else {
 						set.add(list[randint(0,list.length-1)])
@@ -688,7 +687,6 @@
 				if (bool) {
 					dom.style.visibility = 'visible';
 					dom.style.opacity = '1';
-
 					if (animateType !== 0) {
 						for (let i = 0; i < dom.childElementCount; i++) {
 							toggleAnimate(dom.children[i],`animate-${animateType}`);
@@ -880,7 +878,7 @@
 					<h4>Code and app design by me</h4>
 					<p>HSK Dictionary data provided by <a href="https://github.com/ReubenBond/HanBaoBao" target="_blank">ReubenBond's app HanBaoBao</a></p>
 					<p>Spaced Repetition Learning algorithm (SM2+) provided by <a href="http://www.blueraja.com/blog/477/a-better-spaced-repetition-learning-algorithm-sm2" target="_blank">BlueRaja</a></p>
-					<p>Text-to-speech provided by <a href="https://texttospeech.io/" target="_blank">https://texttospeech.io/</a></p>
+					<p>Text-to-speech provided by Google Translate TTS</p>
 					<p>The project and the datas provided are presented without licences<br/>
 					Feel free to build upon the project as you wish.</p>
 					<button id="creditCloseBtn" class='btn'>Close credits</button>
@@ -895,7 +893,7 @@
 					<button id="resetCloseBtn" class='btn'>Return</button>
 				</div>
 			</div>
-			<audio id="tts" src="https://texttospeech.responsivevoice.org/v1/text:synthesize?text=%E7%8B%97&lang=zh-CN&engine=g1&name=&pitch=0.5&rate=0.5&volume=1&key=PL3QYYuV&gender=female"></audio>
+			<audio id="tts"></audio>
 			<!-- info popup -->
 			<div class="popup" id='infoPopup'>
 				<div class="whitebox">
@@ -903,5 +901,5 @@
 				</div>
 			</div>
 		</div>
-	</body>
+	<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'922c6473e911afc6',t:'MTc0MjM4MTI1My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
