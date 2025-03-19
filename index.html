@@ -44,7 +44,7 @@
 			let home, test, list;
 			let cardSets = new Set();
 			
-			let tts; // 原来用于ResponsiveVoice的audio对象（现已不再使用）
+			let tts; // tts
 			let hskPopup, checkBox, elvl, hskButton; // page 1 header
 			let cardDiv, studyBtn, refreshCards, studyIndex = 0; // page 1 main
 			let studyPopup, eflip, eback, bigCard, frontCard, backCard, progress, studyResults, resultButton, pinyinToggle, canFlip = true; //study screen
@@ -289,16 +289,16 @@
 					learnedWords.push(card);
 				}
 			}
-			// TTS using Google TTS
+			// TTS using Web Speech API
 			function playTTS(word) {
-				const audio = new Audio();
-				const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(word)}&tl=zh-CN&client=tw-ob`;
-				audio.src = url;
-				audio.crossOrigin = "anonymous";
-				audio.load();
-				audio.oncanplaythrough = () => {
-					audio.play().catch(error => console.error("播放失败:", error));
-				};
+				if ('speechSynthesis' in window) {
+					const utterance = new SpeechSynthesisUtterance(word);
+					utterance.lang = "zh-CN";  // 设置为中文
+					utterance.rate = 0.7;      // 语速
+					speechSynthesis.speak(utterance);
+				} else {
+					console.error("你的浏览器不支持语音合成！");
+				}
 			}
 			// Settings
 			function resetProgress() {
