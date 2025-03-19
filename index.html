@@ -122,18 +122,17 @@
             resultButton = document.getElementById("resultButton");
             pinyinToggle = document.getElementById("pinyinToggle");
 
-            // 使用原始 HSK flipcard 的翻转逻辑
+            // 使用您提供的翻转逻辑，移除播放发音
             eflip.onclick = () => { 
                 if (canFlip) {
                     bigCard.classList.toggle('flipped');
-                    playTTS(bigCard.children[0].children[1].innerText);
                 }
             }
-
             eback.onclick = () => {
                 openClose(false, studyPopup);
                 window.history.back();
-            };
+            }
+
             resultButton.onclick = () => openClose(false, studyResults);
             pinyinToggle.onchange = () => checkPinyin();
             srsBtn = document.getElementById("SRS");
@@ -523,7 +522,7 @@
                 options.pop();
                 options.push(cardNum);
             }
-            playTTS(card.simplified);
+            // 移除播放发音
             options = shuffle(options);
             const optionBtnWrapper = document.getElementById("divAnswers");
             canFlip = false;
