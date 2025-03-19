@@ -1,907 +1,907 @@
 <!doctype html>
 <html>
-<head>
-    <title>Chinese Workshop Flipcard</title>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
-    <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16x16.png">
-    <link rel="mask-icon" href="images/safari-pinned-tab.svg" color="#5bbad5">
-    <link rel="shortcut icon" href="images/favicon.ico">
-    <meta name="msapplication-TileColor" content="#da532c">
-    <meta name="msapplication-config" content="images/browserconfig.xml">
-    <meta name="theme-color" content="#ffffff">
-    <link href="css/index2.css" rel="stylesheet" type="text/css">
-    <link href="css/preloader.css" rel="stylesheet" type="text/css">
-    <!-- 加载hsk1.js到hsk12.js文件 -->
-    <script type="text/javascript" src='hsk/hsk1.js'></script>
-    <script type="text/javascript" src='hsk/hsk2.js'></script>
-    <script type="text/javascript" src='hsk/hsk3.js'></script>
-    <script type="text/javascript" src='hsk/hsk4.js'></script>
-    <script type="text/javascript" src='hsk/hsk5.js'></script>
-    <script type="text/javascript" src='hsk/hsk6.js'></script>
-    <script type="text/javascript" src='hsk/hsk7.js'></script>
-    <script type="text/javascript" src='hsk/hsk8.js'></script>
-    <script type="text/javascript" src='hsk/hsk9.js'></script>
-    <script type="text/javascript" src='hsk/hsk10.js'></script>
-    <script type="text/javascript" src='hsk/hsk11.js'></script>
-    <script type="text/javascript" src='hsk/hsk12.js'></script>
-    <link rel="manifest" href="manifest.json">
-    <script type="text/javascript">
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('service-worker.js');
-        }
-    </script>
-    <script type="text/javascript">
-        setTimeout(showPage, 14);
-        function showPage() {
-            document.getElementById("loader").style.visibility = "hidden";
-            document.getElementById("loader").style.opacity = 0;
-            setTimeout(() => {
-                document.getElementById("loader").style.display = "none";
-            }, 500);
-        }
+	<head>
+		<title>HSK flipcard</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+	<link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16x16.png">
+	<link rel="mask-icon" href="images/safari-pinned-tab.svg" color="#5bbad5">
+	<link rel="shortcut icon" href="images/favicon.ico">
+	<meta name="msapplication-TileColor" content="#da532c">
+	<meta name="msapplication-config" content="images/browserconfig.xml">
+	<meta name="theme-color" content="#ffffff">
+		<link href="css/index2.css" rel="stylesheet" type="text/css">
+		<link href="css/preloader.css" rel="stylesheet" type="text/css">
+		<script type="text/javascript" src='hsk/hsk1.js'></script>
+		<script type="text/javascript" src='hsk/hsk2.js'></script>
+		<script type="text/javascript" src='hsk/hsk3.js'></script>
+		<script type="text/javascript" src='hsk/hsk4.js'></script>
+		<script type="text/javascript" src='hsk/hsk5.js'></script>
+		<script type="text/javascript" src='hsk/hsk6.js'></script>
+		<link rel="manifest" href="manifest.json">
+		<script type="text/javascript">
+			if ('serviceWorker' in navigator) {
+				navigator.serviceWorker.register('service-worker.js');
+			}
+		</script>
+		<script type="text/javascript">
+			//https://github.com/ReubenBond/HanBaoBao/blob/master/DictionaryDbBuilder/Hsk/HskHskCom/2.txt
+			//http://www.blueraja.com/blog/477/a-better-spaced-repetition-learning-algorithm-sm2
+			setTimeout(showPage, 14);
+			function showPage() {
+				document.getElementById("loader").style.visibility = "hidden";
+				document.getElementById("loader").style.opacity = 0;
+				setTimeout(() => {
+					document.getElementById("loader").style.display = "none";
+				},500)
+			}
+			let dictCards = [];
+			let learnedWords = [];
+			let srsWords = [];
+			let correct = Array(9).fill(0);
+			let home, test, list;
+			let cardSets = new Set();
+			
+			let tts; // tts
+			let hskPopup, checkBox, elvl, hskButton; // page 1 header
+			let cardDiv, studyBtn, refreshCards, studyIndex = 0; // page 1 main
+			let studyPopup, eflip, eback, bigCard, frontCard, backCard, progress, studyResults, resultButton, pinyinToggle, canFlip = true; //study screen
+			let srsBtn, srsPopup, ebackSrs, srsFrontCard, srsBackCard, srsProgress, srsPinyinToggle, srsIndex = 0, weightedCardSet = []; // srs screen
+			let infoPopup, infoCanShow = true; // page 2 srs
+			let foundUpdate = false, settingsBtn, creditBtn, checkUpdateBtn, settingsCloseBtn, settingsLoadBtn, settingsResetBtn, creditCloseBtn, settingsPopup, creditPopup, chineseAlpha, textarea, resetPopup, resetCloseBtn, resetConfirmBtn; // page 2 settings
+			let lwp, lwhsk, listWords; // page 3 list learned words
+			// Onload DOM and Event setups. Also calls some functions to initialize the app.
+			window.addEventListener('load', function() {
+				home = document.getElementById('home');
+				test = document.getElementById('test');
+				list = document.getElementById('list');
+				window.history.pushState({page:'home'}, 'home');
+				window.addEventListener('popstate', () => {
+					if (window.history.state == null) {
+						menyChange(home,true);
+						setTimeout(() => {
+							window.history.pushState({page:'home'},'home');
+						},2000);
+					} else {
+						switch (window.history.state.page) {
+							case 'home':
+								menyChange(home);
+								break;
+							case 'test':
+								menyChange(test);
+								break;
+						}
+					}
+				});
+				for (let v of [home,test,list]) {
+					v.onclick = function() {menyChange(this);};
+				}
+				// tts
+				tts = document.getElementById("tts");
+				// header
+				checkBox = document.querySelectorAll(`input[name*="hsk-"]`);
+				for (let i = 0; i < checkBox.length; i++) {
+					checkBox[i].onchange = () => getCategory(checkBox,elvl);
+				}
+				hskPopup = document.getElementById("hskPopup");
+				elvl = document.getElementById('elvl');
+				elvl.onclick = () => {
+					openClose(true,hskPopup);
+					window.history.pushState({page:'home',popup:1}, 'home');
+				}
+				hskButton = document.getElementById('hskButton');
+				hskButton.onclick = () => {
+					openClose(false,hskPopup);
+					init();
+					window.history.back();
+				};
+				// main
+				cardDiv = document.getElementById("cardDiv");
+				studyBtn = document.getElementById("mainStudyBtn");
+				refreshCards = document.getElementById("refreshCards");
+				studyBtn.onclick = () => {
+					study();
+					window.history.pushState({page:'home',popup:2}, 'home');
+				};
+				refreshCards.onclick = () => {
+					cardSets = getCards(dictCards,9);
+					addCards(cardSets, cardDiv);
+				};
+				// study screen
+				studyPopup = document.getElementById("study");
+				eflip = document.getElementById("eflip");
+				eback = document.getElementById("eback");
+				bigCard = document.getElementById("bigCard");
+				frontCard = document.getElementById("front");
+				backCard = document.getElementById("back");
+				progress = document.getElementById("progress");
+				studyResults = document.getElementById("studyResults");
+				resultButton = document.getElementById("resultButton");
+				pinyinToggle = document.getElementById("pinyinToggle");
+				eflip.onclick = () => { 
+					if (canFlip) {
+						bigCard.classList.toggle('flipped');
+						playTTS(bigCard.children[0].children[1].innerText);
+					}
+				}
+				eback.onclick = () => {
+					openClose(false,studyPopup);
+					window.history.back();
+				}
+				resultButton.onclick = () => openClose(false,studyResults);
+				pinyinToggle.onchange = () => checkPinyin();
+				//SRS
+				srsBtn = document.getElementById("SRS");
+				srsPopup = document.getElementById("srsPopup");
+				srsBtn.onclick = function() {
+					this.classList.toggle("active");
+					runSRS();
+					setTimeout(() => this.classList.toggle("active"),1000);
+					window.history.pushState({page:'test',popup:1}, 'test');
+				}
+				ebackSrs = document.getElementById("ebackSrs");
+				srsBigCard = document.getElementById("srsBigCard");
+				srsFrontCard = document.getElementById("srsFront");
+				srsBackCard = document.getElementById("srsBack");
+				srsProgress = document.getElementById("srsProgress");
+				srsPinyinToggle = document.getElementById("srsPinyinToggle");
+				ebackSrs.onclick = () => {
+					openClose(false,srsPopup);
+					setLocalStorage(JSON.stringify(learnedWords));
+					checkSRS();
+					window.history.back();
+				}
+				srsPinyinToggle.onchange = () => checkPinyin(1);
+				infoPopup = document.getElementById("infoPopup");
+				// page 2 settings
+				settingsPopup = document.getElementById("settingsPopup");
+				creditPopup = document.getElementById("creditPopup");
+				settingsBtn = document.getElementById("settingsBtn");
+				settingsCloseBtn = document.getElementById("settingsCloseBtn");
+				settingsLoadBtn = document.getElementById("settingsLoadBtn");
+				settingsResetBtn = document.getElementById("settingsResetBtn");
+				textarea = document.getElementById("textarea");
+				creditBtn = document.getElementById("creditBtn");
+				creditCloseBtn = document.getElementById("creditCloseBtn");
+				settingsBtn.onclick = () => {
+					openClose(true, settingsPopup);
+					textarea.value = utoa(localStorage.hskFlipCard);
+					window.history.pushState({page:'test',popup:2}, 'test');
+				}
+				settingsLoadBtn.onclick = () => loadProgress();
+				settingsCloseBtn.onclick = () => {
+					openClose(false, settingsPopup);
+					window.history.back();
+				}
+				creditBtn.onclick = () => {
+					openClose(true, creditPopup);
+					window.history.pushState({page:'test',popup:3}, 'test');
+				}
+				creditCloseBtn.onclick = () => {
+					openClose(false, creditPopup);
+					window.history.back();
+				}
+				chineseAlpha = document.getElementById("chineseAlpha");
+				chineseAlpha.onchange = () => init();
+				resetPopup = document.getElementById("resetPopup");
+				resetConfirmBtn = document.getElementById("resetConfirmBtn");
+				resetCloseBtn = document.getElementById("resetCloseBtn");
+				settingsResetBtn.onclick = () => openClose(true, resetPopup);
+				resetConfirmBtn.onclick = () => resetProgress();
+				resetCloseBtn.onclick = () => openClose(false, resetPopup);
+				// page 2 setting update btn
+				checkUpdateBtn = document.getElementById("checkUpdateBtn");
+				checkUpdateBtn.addEventListener('click', function() {
+					if ('serviceWorker' in navigator) {
+						navigator.serviceWorker.register('service-worker.js').then(function(reg) {
+							reg.onupdatefound = function() {
+								foundUpdate = true;
+								var installingWorker = reg.installing;
+								installingWorker.onstatechange = function() {
+									switch (installingWorker.state) {
+										case 'installed':
+											if (navigator.serviceWorker.controller) {
+												reg.update();
+												console.log('New or updated content is available.');
+												showInfoPopup("Successfully updated the app!");
+											} else {
+												console.log('Content is now available offline!');
+												showInfoPopup("The app is already up to date!");
+											}
+											break;
+										case 'redundant':
+											console.error('The installing service worker became redundant.');
+											break;
+									}
+								};
+							};
+							setTimeout(() => {
+								if (!foundUpdate) showInfoPopup("The app is already up to date!");
+								foundUpdate = false;
+							}, 1000);
+						}).catch(function(e) {
+							console.error('Error during service worker registration:', e);
+						});
+					}
+				});
+				// LocalStorage
+				listWords = document.getElementById("listWords");
+				// page 3 listWords
+				lwhsk = document.getElementsByClassName('lwhsk');
+				lwp = document.getElementsByClassName('lwp');
+				for (p of lwp) {
+					p.onclick = function() {
+						lwhsk[+this.innerText.substring(3)-1].classList.toggle("lwshow");
+						this.classList.toggle("lwshow");
+					}
+				}
+				checkLocalStorage();
+				// initialization
+				init();
+			});
+			function init() {
+				getCategory(checkBox,elvl);
+				cardSets = getCards(dictCards,9);
+				addCards(cardSets, cardDiv);
+				//studyBtn.click();
+				//srsBtn.click();
+			}
+			function updateLearnedWords(wordList) {
+				document.getElementById('wordsLearned').innerHTML = "Words learned so far: "+wordList.length;
+				for (hsk of lwhsk) {
+					hsk.innerHTML = "";
+				}
+				for (const word of wordList) {
+					const card = document.createElement('div');
+					card.innerHTML = `<span>${chineseAlpha.value=='simplified'?word.simplified:word.traditional}</span> <span>${word.pinyin}</span> <span>${word.eng}</span>`;
+					lwhsk[+word.hsk-1].appendChild(card);
+				}
+			}
+			function addToLearnedWords(set, correct) {
+				for (let i=0; i<set.length; i++) {
+					const cardNum = set[i];
+					const card = dictCards[cardNum];
+					if (!learnedWords.includes(card)) {
+						card.difficulty = card.hsk*0.1 + 0.3;
+						card.difficulty += correct[i] == 1 ? -0.1 : 0.1; // difficulty increase if not correct on study
+						// set time to yesterday so srs can run
+						// 1 day = 86399462
+						card.daysBetweenReview = 3;
+						card.date = new Date(new Date().getTime()-(0*86399462)).toJSON();
+						learnedWords.push(card);
+					}
+				}
+				setLocalStorage(JSON.stringify(learnedWords));
+			}
+			function setLocalStorage(str) {
+				localStorage.setItem('hskFlipCard',str)
+			}
+			function checkLocalStorage() {
+				// If first time / no localstorage found
+				if (localStorage.getItem('hskFlipCard') == null) {
+					localStorage.setItem('hskFlipCard','[]')
+				}
+				// else load learned words
+				const data = JSON.parse(localStorage.getItem("hskFlipCard"));
+				for (const card of data) {
+					learnedWords.push(card);
+				}
+			}
+			// TTS
+			function setTTS(word) {
+				const a = `https://texttospeech.responsivevoice.org/v1/text:synthesize?text=${encodeURIComponent(word)}&lang=zh-CN&engine=g1&name=&pitch=0.5&rate=0.5&volume=1&key=PL3QYYuV&gender=female`;
+				if (tts.src != a) tts.src = a;
+			}
+			function playTTS(word) {
+				setTTS(word);
+				tts.play();
+			}
+			// Settings
+			function resetProgress() {
+				localStorage.removeItem("hskFlipCard");
+				location.reload();
+			}
+			function loadProgress() {
+				let error = false;
+				let progress = [];
+				try {
+					progress = JSON.parse(atou(textarea.value));
+					if (!checkValidProgress(progress)) throw "parse error";
+					learnedWords = progress;
+					setLocalStorage(JSON.stringify(learnedWords));
+					showInfoPopup("Successfully loaded the saved progress!");
+					checkSRS();
+					updateLearnedWords(learnedWords);
+				} catch(err) {
+					showInfoPopup("Error on loading saved progress!");
+				}
+			}
+			function checkValidProgress(progress) {
+				const keys = ["date", "daysBetweenReview", "difficulty", "eng", "hsk", "pinyin", "simplified", "traditional"];
+				for (let i=0; i<progress.length; i++) {
+					const word = progress[i];
+					const key = Object.keys(word).sort();
+					for (let j=0; j<keys.length; j++) {
+						if (key[j] != keys[j]) return false;
+					}
+					const val = Object.values(word);
+					if (val.length !== 8) return false;
+					if (val[0][0].charCodeAt() <= 122 && val[1][0].charCodeAt() <= 122) return false;
+					if (typeof val[2] != "string") return false;
+					if (typeof val[3] != "string") return false;
+					if (typeof val[4] != "string" && val[4].length != 1) return false;
+					if (typeof val[5] != "number") return false;
+					if (typeof val[6] != "number") return false;
+					if (typeof val[7] != "string") return false;
+					if (isNaN(new Date(val[7]).valueOf())) return false;
+				}
+				return true;
+			}
+			// SRS
+			function runSRS() {
+				if (weightedCardSet.length > 0) {
+					srsIndex = 0;
+					srsProgress.value = 0;
+					srsProgress.max = weightedCardSet.length;
+					getSRSCard(weightedCardSet,srsFrontCard,srsBackCard);
+					//console.log(weightedCardSet);
+					openClose(true,srsPopup);
+				} else {
+					showInfoPopup("No words to study for today!");
+				}
+			}
+			function checkSRS() {
+				weightedCardSet = getWeightCards(learnedWords);
+				if (weightedCardSet.length > 0) {
+					const l = weightedCardSet.length;
+					document.getElementById('srsInfo').innerHTML = `There are ${l>1? l+" words" : l+" word"} to review! Do SRS!`
+				} else {
+					document.getElementById('srsInfo').innerHTML = "Nothing to review today!"
+				}
+			}
+			function showInfoPopup(msg,timer=2400) {
+				if (infoCanShow) {
+					infoCanShow = false;
+					infoPopup.children[0].children[0].innerHTML = msg;
+					openClose(true, infoPopup);
+					setTimeout(() => {
+						openClose(false, infoPopup)
+						infoCanShow = true;
+					},timer);
+				}
+			}
+			function getWeightCards(set) {
+				const cards = [];
+				const timeNow = new Date().getTime();
+				for (let i=0; i<set.length; i++) {
+					// check date not today first
+					if (timeNow-new Date(set[i].date).getTime() >= set[i].daysBetweenReview*86399462) {
+						cards.push(i);
+					}
+				}
+				return cards;
+			}
+			function getSRSCard(set,front,back) {
+				if (srsIndex == set.length) {
+					showInfoPopup(`Finished reviewing ${set.length} words!<br/>Successfully updated weighting of learned words!`);
+					setTimeout(() => {
+						openClose(false,srsPopup);
+						setLocalStorage(JSON.stringify(learnedWords));
+					},1500);
+					return;
+				}
+				const timeNow = new Date().getTime();
+				// get card, display card
+				const cardNum = set[srsIndex];
+				const card = learnedWords[cardNum];
+				front.innerHTML = `
+					<p>${card.pinyin}</p>
+					<p>${chineseAlpha.value=='simplified'?card.simplified:card.traditional}</p>
+				`;
+				back.innerHTML = `
+					<p>${card.pinyin}</p>
+					<p>${card.eng}</p>
+				`;
+				playTTS(card.simplified);
+				checkPinyin(1);
+				const chooseBtnWrapper = document.getElementById("srsDivAnswers");
+				toggleAnimate(bigCard,'animate-2');
+				toggleAnimate(chooseBtnWrapper,'animate-3');
+				chooseBtnWrapper.innerHTML = '';
+				for (btn of ['Ez peazy!','Maybe?','I forgot...']) {
+					const choiceBtn = document.createElement('button');
+					choiceBtn.innerHTML = btn;
+					setTimeout(() => choiceBtn.value = 'canClick',900);
+					choiceBtn.onclick = function() {
+						if (this.value == "canClick") {
+							this.classList.toggle('active');
+							srsBigCard.classList.toggle('flipped');
+							for (dom of chooseBtnWrapper.children) {
+								dom.disabled = true;
+							}
+							this.style.boxShadow = '0 0 10px 10px rgb(255,230,230)';
+							this.style.backgroundColor = 'white';
+							srsProgress.value++;
+							let percentOverdue = 0;
+							let days = Math.floor((new Date().getTime() - new Date(card.date).getTime())/86399462)
+							let performanceRating = 0.6;
+							if (this.innerText == 'Ez peazy!') {
+								percentOverdue = Math.min(2, days/card.daysBetweenReview);
+								performanceRating = 1;
+							} else if (this.innerText == "I forgot...") {
+								percentOverdue = 1;
+								performanceRating = 0.2;
+							}
+							card.difficulty += clampNumber(percentOverdue*1/17*(8-9*performanceRating), 0, 1);
+							let difficultyWeight = 3 - 1.7*card.difficulty;
+							let daysBetweenReview = 1 + (difficultyWeight-1)*percentOverdue;
+							if (this.innerText == "I forgot...") {
+								daysBetweenReview = Math.max(1, 1/Math.pow(difficultyWeight,2));
+							}
+							card.daysBetweenReview *= daysBetweenReview;
+							card.date = new Date().toJSON();
+							setTimeout(() => {
+								if (srsBigCard.classList.contains('flipped')) srsBigCard.classList.remove('flipped');
+								setTimeout(() => {
+									srsIndex++;
+									getSRSCard(set,front,back);
+								},1500);
+							},1500);
+						}
+					}
+					chooseBtnWrapper.appendChild(choiceBtn);
+				}
+			}
+			// Study
+			function study() {
+				openClose(true,studyPopup);
+				studyIndex = 0;
+				progress.value = 0;
+				correct = Array(9).fill(0);
+				getCard(shuffle(cardSets),frontCard,backCard);
+			}
+			function showResult(set,correct) {
+				studyResults.children[0].innerHTML = "";
+				for (let i=0;i<set.length;i++) {
+					const card = dictCards[set[i]];
+					studyResults.children[0].innerHTML += `
+						<ul>
+							<li style="color: ${correct[i] == 1 ? '#43ff43' : '#ff3b3b'};">[${chineseAlpha.value=='simplified'?card.simplified:card.traditional}] [${card.pinyin}]</li>
+							<li>${card.eng}</li>
+						</ul>
+					`;
+				}
+				openClose(true,studyResults);
+				setTimeout(() => {
+					openClose(false,studyPopup);
+					addToLearnedWords(set,correct);
+				},600);
+			}
+			function checkPinyin(type=0) {
+				if (type == 0) {
+					if (pinyinToggle.checked) {
+						frontCard.children[0].classList.add("hidePinyin");
+					} else {
+						frontCard.children[0].classList.remove("hidePinyin");
+					}
+				} else {
+					if (srsPinyinToggle.checked) {
+						srsFrontCard.children[0].classList.add("hidePinyin");
+					} else {
+						srsFrontCard.children[0].classList.remove("hidePinyin");
+					}
+				}
+			}
+			function getCard(set,front,back) {
+				if (studyIndex == set.length) {
+					showInfoPopup("Finished studying! New words added!");
+					setTimeout(() => {
+						showResult(set,correct);
+					},500);
+					return;
+				}
+				//console.log(set);
+				// get card, display card
+				const cardNum = set[studyIndex];
+				const card = dictCards[cardNum];
+				front.innerHTML = `
+					<p>${card.pinyin}</p>
+					<p>${chineseAlpha.value=='simplified'?card.simplified:card.traditional}</p>
+				`;
+				back.innerHTML = `
+					<p>${card.pinyin}</p>
+					<p>${card.eng}</p>
+				`;
+				checkPinyin();
+				// get 3 answer options
+				let options = shuffle(set);
+				options.length = 3;
+				if (!options.includes(cardNum)) {
+					options.pop();
+					options.push(cardNum);
+				}
+				playTTS(card.simplified);
+				options = shuffle(options);
+				const optionBtnWrapper = document.getElementById("divAnswers");
+				canFlip = false;
+				toggleAnimate(bigCard,'animate-2');
+				toggleAnimate(optionBtnWrapper,'animate-3');
+				setTimeout(() => canFlip = true, 700);
+				optionBtnWrapper.innerHTML = '';
+				for (n of options) {
+					const answerBtn = document.createElement('button');
+					answerBtn.innerHTML = dictCards[n].eng;
+					setTimeout(() => answerBtn.value = 'canClick',900);
+					answerBtn.onclick = function() {
+						if (this.value == "canClick") {
+							let count = 0;
+							this.classList.toggle('active');
+							this.disabled = true;
+							if (this.innerHTML == backCard.children[1].innerHTML) {
+								for (dom of optionBtnWrapper.children) {
+									if (dom.disabled == true) count++;
+									dom.disabled = true;
+								}
+								canFlip = false;
+								correct[studyIndex] = (count > 1) ? 0 : 1;
+								this.style.boxShadow = '0 0 10px 10px rgb(255,230,230)';
+								this.style.backgroundColor = 'white';
+								setTimeout(() => {
+									if (bigCard.classList.contains('flipped')) bigCard.classList.remove('flipped');
+									progress.value++;
+									studyIndex++;
+									getCard(set,front,back);
+								},700);
+							} else {
+								this.style.backgroundColor = 'rgba(0,0,0,0.5)';
+							}
+						}
+					}
+					optionBtnWrapper.appendChild(answerBtn);
+				}
+			}
+			// Main menu function to give onclick event. CSS animation to flip card.
+			function getMainCardData() {
+				const allCards = document.getElementsByClassName('cards');
+				for (let i = 0; i < allCards.length; i++) {
+					allCards[i].onclick = function() {mainFlip(this)};
+				}
+			}
+			function mainFlip(dom) {
+				toggleAnimate(dom,'cardsFlip',100);
+				dom.onclick = function() {};
+				setTimeout(function() {
+					dom.onclick = () => mainFlip(dom);
+				},1000);
+			}
+			function addCards(arr, output) {
+				output.innerHTML = '';
+				for (x of arr) {
+					let card = document.createElement('div');
+					card.className = 'cards';
+					card.innerHTML = `
+						<p>${dictCards[x].pinyin}</p>
+						<p>${chineseAlpha.value=='simplified'?dictCards[x].simplified:dictCards[x].traditional}</p>
+						<p>${dictCards[x].eng}</p>
+					`;
+					output.appendChild(card);
+				}
+				getMainCardData();
+			}
+			// Custom logic functions for returning certain logical things.
+			function randint(min, max) {
+				return Math.floor(Math.random() * (max - min + 1) ) + min;
+			}
+			function shuffle(arr) {
+				return arr.map(x => x).sort(() => Math.random() - 0.5);
+			}
+			function clampNumber(num, a, b) {
+				return Math.max(Math.min(num, Math.max(a, b)), Math.min(a, b));
+			}
+			// Encode base64
+			function utoa(str) {
+				return window.btoa(unescape(encodeURIComponent(str)));
+			}
+			// Decode base64
+			function atou(str) {
+				return decodeURIComponent(escape(window.atob(str)));
+			}
+			function menyChange(meny, force=false) {
+				for (let v of [home,test,list]) {
+					v.classList.remove('active');
+				}
+				for (let i = 1; i <= 3; i++) {
+					document.getElementById(`page${i}`).style.display = 'none';
+					document.getElementById("bodyWrapper").children[0].style.display = 'none';
+				}
+				meny.classList.add('active');
+				if (meny.name == 1) {
+					if (!force) window.history.replaceState({page:'home'},'home');
+					document.getElementById(`page${meny.name}`).style.display = 'flex';
+					document.getElementById("bodyWrapper").children[0].style.display = 'block';
+					openClose(false,hskPopup);
+					openClose(false,studyPopup);
+				} else if (meny.name == 2) {
+					if (!force) window.history.replaceState({page:'test'},'test');
+					checkSRS();
+					openClose(false,srsPopup);
+					openClose(false,settingsPopup);
+					openClose(false,creditPopup);
+				} else if (meny.name == 3) {
+					if (!force) window.history.replaceState({page:'list'},'list');
+					updateLearnedWords(learnedWords);
+				}
+				document.getElementById(`page${meny.name}`).style.display = 'block';
+			}
+			// Custom function for toggling CSS animations after a given time.
+			function toggleAnimate(dom,animateName,time=1400) {
+				dom.classList.toggle(animateName);
+				setTimeout(() =>{
+					dom.classList.toggle(animateName);
+				},time);
+			}
+			// Function to choose which HSK level, display as text too.
+			function getCategory(arrDom,output) {
+				elvl.innerHTML = 'HSK';
+				dictCards = [];
+				for (let i = 0; i < arrDom.length; i++) {
+					if (arrDom[i].checked) {
+						let value = arrDom[i].value;
+						elvl.innerHTML += `-${value}`;
+						// Push all hsk to dict.
+						let dict = eval(`hsk${value}`);
+						for (let i = 0; i < dict.length; i++) {
+							let entry = dict[i].split("\t");
+							let eng = entry.splice(4,entry.length).join(' ')
+							dictCards.push({simplified: entry[0], traditional: entry[1], pinyin: entry[3], eng: eng, hsk: value});
+						}
+					}
+				}
+				if (dictCards.length == 0) {
+					arrDom[0].checked = true;
+					elvl.innerHTML += `-${arrDom[0].value}`;
+					for (let i = 0; i < hsk1.length; i++) {
+						let entry = hsk1[i].split(' ');
+						let eng = entry.splice(4,entry.length).join(' ')
+						dictCards.push({simplified: entry[0], traditional: entry[1], pinyin: entry[3], eng: eng, hsk: arrDom[0].value});
+					}
+				}
+			}
+			// Get unique cards from dictCards
+			function getCards(list,n,index=true) {
+				let set = new Set();
+				while (set.size < n) {
+					if (index) {
+						set.add(randint(0,list.length-1));
+					} else {
+						set.add(list[randint(0,list.length-1)])
+					}
+				}
+				set = Array.from(set);
+				console.log(set);
+				return set;
+			}
+			// Custom function to open/close popups.
+			function openClose(bool,dom,animateType=1) {
+				if (bool) {
+					dom.style.visibility = 'visible';
+					dom.style.opacity = '1';
 
-        let dictCards = [];
-        let learnedWords = [];
-        let srsWords = [];
-        let correct = Array(9).fill(0);
-        let home, test, list;
-        let cardSets = new Set();
-        let tts;
-        let lessonPopup, checkBox, elvl, lessonButton;
-        let cardDiv, studyBtn, refreshCards, studyIndex = 0;
-        let studyPopup, eflip, eback, bigCard, frontCard, backCard, progress, studyResults, resultButton, pinyinToggle, canFlip = true;
-        let srsBtn, srsPopup, ebackSrs, srsBigCard, srsFrontCard, srsBackCard, srsProgress, srsPinyinToggle, srsIndex = 0, weightedCardSet = [];
-        let infoPopup, infoCanShow = true;
-        let foundUpdate = false, settingsBtn, creditBtn, checkUpdateBtn, settingsCloseBtn, settingsLoadBtn, settingsResetBtn, creditCloseBtn, settingsPopup, creditPopup, chineseAlpha, textarea, resetPopup, resetCloseBtn, resetConfirmBtn;
-        let lwp, lwhsk, listWords;
+					if (animateType !== 0) {
+						for (let i = 0; i < dom.childElementCount; i++) {
+							toggleAnimate(dom.children[i],`animate-${animateType}`);
+						}
+					}
+				} else {
+					dom.style.visibility = 'hidden';
+					dom.style.opacity = '0';
+				}
+			}
+		</script>
+	</head>
+	<body>
+		<div id="loader">
+			<div id="audio"></div>
+			<!-- <div id="preloader" preload></div> -->
+			<div class="spinner" preload></div>
+		</div>
+		<div id="bodyWrapper">
+			<!-- Header -->
+			<header>
+				<button id="elvl">HSK</button>
+			</header>
+			<!-- Main -->
+			<main>
+				<!-- PAGE 1 -->
+				<div id="page1">
+					<div class="cardsMain">
+						<div id="cardDiv">
+						</div>
+						<div>
+							<a id="refreshCards">change cards</a>
+							<button class="btn" id="mainStudyBtn">Study</button>
+						</div>
+					</div>
+				</div>
+				<!-- PAGE 2 -->
+				<div id="page2">
+					<div class="review">
+						<div class="roundCircle" id="SRS">
+							<h2>SRS</h2>
+						</div>
+						<div class="srsInfo">
+							<h4 id="srsInfo">Nothing for today!</h4>
+						</div>
+						<div class="settings">
+							<button class="btn" id="settingsBtn">Settings</button>
+							<button class="btn" id="creditBtn">Credit</button>
+							<button class="btn" id="checkUpdateBtn">Check for update</button>
+						</div>
+					</div>
+				</div>
+				<!-- PAGE 3 -->
+				<div id="page3">
+					<h3 id="wordsLearned">Words Learned:</h3>
+					<div id="listWords">
+						<div><p class="lwp">HSK1</p><div class="lwhsk"></div></div>
+						<div><p class="lwp">HSK2</p><div class="lwhsk"></div></div>
+						<div><p class="lwp">HSK3</p><div class="lwhsk"></div></div>
+						<div><p class="lwp">HSK4</p><div class="lwhsk"></div></div>
+						<div><p class="lwp">HSK5</p><div class="lwhsk"></div></div>
+						<div><p class="lwp">HSK6</p><div class="lwhsk"></div></div>
+					</div>
+				</div>
+			</main>
+			<!-- Footer -->
+			<footer>
+				<button name="1" id='home' class='active'><i>🏠</i></button>
+				<button name="2" id='test'><i>📚</i></button>
+				<button name="3" id='list'><i>📜</i></button>
+			</footer>
 
-        window.addEventListener('load', function() {
-            home = document.getElementById('home');
-            test = document.getElementById('test');
-            list = document.getElementById('list');
-            window.history.pushState({page:'home'}, 'home');
-            window.addEventListener('popstate', () => {
-                if (window.history.state == null) {
-                    menyChange(home, true);
-                    setTimeout(() => {
-                        window.history.pushState({page:'home'}, 'home');
-                    }, 2000);
-                } else {
-                    switch (window.history.state.page) {
-                        case 'home':
-                            menyChange(home);
-                            break;
-                        case 'test':
-                            menyChange(test);
-                            break;
-                    }
-                }
-            });
-            for (let v of [home, test, list]) {
-                v.onclick = function() { menyChange(this); };
-            }
-            tts = document.getElementById("tts");
-            checkBox = document.querySelectorAll(`input[name*="lesson-"]`);
-            for (let i = 0; i < checkBox.length; i++) {
-                checkBox[i].onchange = () => getCategory(checkBox, elvl);
-            }
-            lessonPopup = document.getElementById("lessonPopup");
-            elvl = document.getElementById('elvl');
-            elvl.onclick = () => {
-                openClose(true, lessonPopup);
-                window.history.pushState({page:'home', popup:1}, 'home');
-            };
-            lessonButton = document.getElementById('lessonButton');
-            lessonButton.onclick = () => {
-                openClose(false, lessonPopup);
-                init();
-                window.history.back();
-            };
-            cardDiv = document.getElementById("cardDiv");
-            studyBtn = document.getElementById("mainStudyBtn");
-            refreshCards = document.getElementById("refreshCards");
-            studyBtn.onclick = () => {
-                study();
-                window.history.pushState({page:'home', popup:2}, 'home');
-            };
-            refreshCards.onclick = () => {
-                cardSets = getCards(dictCards, 9);
-                addCards(cardSets, cardDiv);
-            };
-            studyPopup = document.getElementById("study");
-            eflip = document.getElementById("eflip");
-            eback = document.getElementById("eback");
-            bigCard = document.getElementById("bigCard");
-            frontCard = document.getElementById("front");
-            backCard = document.getElementById("back");
-            progress = document.getElementById("progress");
-            studyResults = document.getElementById("studyResults");
-            resultButton = document.getElementById("resultButton");
-            pinyinToggle = document.getElementById("pinyinToggle");
+			<!-- HSK Level -->
+			<div class="popup" id='hskPopup'>
+				<div>
+					<h4>Choose Flipcards from categories</h4>
+					<p><input type="checkbox" name="hsk-1" id="hsk1" value="1" checked><label for="hsk1">HSK1</label></p>
+					<p><input type="checkbox" name="hsk-2" id="hsk2" value="2"><label for="hsk2">HSK2</label></p>
+					<p><input type="checkbox" name="hsk-3" id="hsk3" value="3"><label for="hsk3">HSK3</label></p>
+					<p><input type="checkbox" name="hsk-4" id="hsk4" value="4"><label for="hsk4">HSK4</label></p>
+					<p><input type="checkbox" name="hsk-5" id="hsk5" value="5"><label for="hsk5">HSK5</label></p>
+					<p><input type="checkbox" name="hsk-6" id="hsk6" value="6"><label for="hsk6">HSK6</label></p>
+				</div>
+				<br>
+				<button id="hskButton" class='btn'>Confirm</button>
+			</div>
 
-            // 使用您提供的翻转逻辑，移除播放发音
-            eflip.onclick = () => { 
-                if (canFlip) {
-                    bigCard.classList.toggle('flipped');
-                }
-            }
-            eback.onclick = () => {
-                openClose(false, studyPopup);
-                window.history.back();
-            }
+			<!-- Study Flipcards -->
+			<div class="popup" id='studyResults'>
+				<div>
+				</div>
+				<button id="resultButton" class='btn'>Done</button>
+			</div>
 
-            resultButton.onclick = () => openClose(false, studyResults);
-            pinyinToggle.onchange = () => checkPinyin();
-            srsBtn = document.getElementById("SRS");
-            srsPopup = document.getElementById("srsPopup");
-            srsBtn.onclick = function() {
-                this.classList.toggle("active");
-                runSRS();
-                setTimeout(() => this.classList.toggle("active"), 1000);
-                window.history.pushState({page:'test', popup:1}, 'test');
-            };
-            ebackSrs = document.getElementById("ebackSrs");
-            srsBigCard = document.getElementById("srsBigCard");
-            srsFrontCard = document.getElementById("srsFront");
-            srsBackCard = document.getElementById("srsBack");
-            srsProgress = document.getElementById("srsProgress");
-            srsPinyinToggle = document.getElementById("srsPinyinToggle");
-            ebackSrs.onclick = () => {
-                openClose(false, srsPopup);
-                setLocalStorage(JSON.stringify(learnedWords));
-                checkSRS();
-                window.history.back();
-            };
-            srsPinyinToggle.onchange = () => checkPinyin(1);
-            infoPopup = document.getElementById("infoPopup");
-            settingsPopup = document.getElementById("settingsPopup");
-            creditPopup = document.getElementById("creditPopup");
-            settingsBtn = document.getElementById("settingsBtn");
-            settingsCloseBtn = document.getElementById("settingsCloseBtn");
-            settingsLoadBtn = document.getElementById("settingsLoadBtn");
-            settingsResetBtn = document.getElementById("settingsResetBtn");
-            textarea = document.getElementById("textarea");
-            creditBtn = document.getElementById("creditBtn");
-            creditCloseBtn = document.getElementById("creditCloseBtn");
-            settingsBtn.onclick = () => {
-                openClose(true, settingsPopup);
-                textarea.value = utoa(localStorage.chineseWorkshopFlipCard);
-                window.history.pushState({page:'test', popup:2}, 'test');
-            };
-            settingsLoadBtn.onclick = () => loadProgress();
-            settingsCloseBtn.onclick = () => {
-                openClose(false, settingsPopup);
-                window.history.back();
-            };
-            creditBtn.onclick = () => {
-                openClose(true, creditPopup);
-                window.history.pushState({page:'test', popup:3}, 'test');
-            };
-            creditCloseBtn.onclick = () => {
-                openClose(false, creditPopup);
-                window.history.back();
-            };
-            chineseAlpha = document.getElementById("chineseAlpha");
-            chineseAlpha.onchange = () => init();
-            resetPopup = document.getElementById("resetPopup");
-            resetConfirmBtn = document.getElementById("resetConfirmBtn");
-            resetCloseBtn = document.getElementById("resetCloseBtn");
-            settingsResetBtn.onclick = () => openClose(true, resetPopup);
-            resetConfirmBtn.onclick = () => resetProgress();
-            resetCloseBtn.onclick = () => openClose(false, resetPopup);
-            checkUpdateBtn = document.getElementById("checkUpdateBtn");
-            checkUpdateBtn.addEventListener('click', function() {
-                if ('serviceWorker' in navigator) {
-                    navigator.serviceWorker.register('service-worker.js').then(function(reg) {
-                        reg.onupdatefound = function() {
-                            foundUpdate = true;
-                            var installingWorker = reg.installing;
-                            installingWorker.onstatechange = function() {
-                                switch (installingWorker.state) {
-                                    case 'installed':
-                                        if (navigator.serviceWorker.controller) {
-                                            reg.update();
-                                            console.log('New or updated content is available.');
-                                            showInfoPopup("Successfully updated the app!");
-                                        } else {
-                                            console.log('Content is now available offline!');
-                                            showInfoPopup("The app is already up to date!");
-                                        }
-                                        break;
-                                    case 'redundant':
-                                        console.error('The installing service worker became redundant.');
-                                        break;
-                                }
-                            };
-                        };
-                        setTimeout(() => {
-                            if (!foundUpdate) showInfoPopup("The app is already up to date!");
-                            foundUpdate = false;
-                        }, 1000);
-                    }).catch(function(e) {
-                        console.error('Error during service worker registration:', e);
-                    });
-                }
-            });
-            listWords = document.getElementById("listWords");
-            lwhsk = document.getElementsByClassName('lwhsk');
-            lwp = document.getElementsByClassName('lwp');
-            for (p of lwp) {
-                p.onclick = function() {
-                    lwhsk[+this.innerText.substring(6)-1].classList.toggle("lwshow");
-                    this.classList.toggle("lwshow");
-                };
-            }
-            checkLocalStorage();
-            init();
-        });
+			<div class="popup" id='study'>
+				<header class="popupHeader">
+					<div>
+						<p><a id='eback'><i>⬅</i> return</a></p>
+						<p>
+						<span style="position: relative; top: -16px; right: 5px;">Show pinyin</span>
+						<label class="switch">
+							<input type="checkbox" id='pinyinToggle' name="pinyinToggle">
+							<span class="slider round"></span>
+						</label>
+						</p>
+					</div>
+				</header>
+				<div id="eflip">
+					<div id="bigCard" class="bigCard">
+						<div id="front" class="front">
+							<p>gǒu</p>
+							<p>狗</p>
+						</div>
+						<div id="back" class="back">
+							<p>gǒu</p>
+							<p>dog</p>
+						</div>
+					</div>
+				</div>
+				<span style='margin: 20px;'>click to flip</span>
+				<br><br>
+				<div style='justify-content: center; display: flex; width: 93%;'>
+					<div id="divAnswers" class="studyBtn">
+						<button>A1</button>
+						<button>A2</button>
+						<button>A3</button>
+					</div>
+				</div>
+				<progress id='progress' value="0" max="9"></progress>
+			</div>
 
-        function init() {
-            getCategory(checkBox, elvl);
-            cardSets = getCards(dictCards, 9);
-            addCards(cardSets, cardDiv);
-        }
+			<!-- Spaced Repetitive Study flipcards -->
+			<div class="popup" id='srsPopup'>
+				<header class="popupHeader">
+					<div>
+						<p><a id='ebackSrs'><i>⬅</i>return</a></p>
+						<p>
+						<span style="position: relative; top: -16px; right: 5px;">Show pinyin</span>
+						<label class="switch">
+							<input type="checkbox" id='srsPinyinToggle' name="srsPinyinToggle">
+							<span class="slider round"></span>
+						</label>
+						</p>
+					</div>
+				</header>
+				<div id="eSrs">
+					<div id="srsBigCard" class="bigCard">
+						<div id="srsFront" class="front">
+							<p>gǒu</p>
+							<p>狗</p>
+						</div>
+						<div id="srsBack" class="back">
+							<p>gǒu</p>
+							<p>dog</p>
+						</div>
+					</div>
+				</div>
+				<span style='margin: 20px;'>choose how well you remember</span>
+				<br><br>
+				<div style='justify-content: center; display: flex; width: 93%;'>
+					<div id="srsDivAnswers" class="studyBtn">
+						<button>Easy</button>
+						<button>Good</button>
+						<button>Bad</button>
+					</div>
+				</div>
+				<progress id='srsProgress' value="0" max="9"></progress>
+			</div>
 
-        function updateLearnedWords(wordList) {
-            document.getElementById('wordsLearned').innerHTML = "Words learned so far: " + wordList.length;
-            for (hsk of lwhsk) {
-                hsk.innerHTML = "";
-            }
-            for (const word of wordList) {
-                const card = document.createElement('div');
-                card.innerHTML = `<span>${chineseAlpha.value == 'simplified' ? word.simplified : word.traditional}</span> <span>${word.pinyin}</span> <span>${word.eng}</span>`;
-                lwhsk[+word.lesson-1].appendChild(card);
-            }
-        }
+			<!-- Settings -->
+			<div class="popup" id='settingsPopup'>
+				<div class="whitebox">
+					<h4>Chinese character writing:</h4>
+					<select id="chineseAlpha" name="chineseAlpha">
+						<option value="simplified" selected>Simplified</option>
+						<option value="traditional">Traditional</option>
+					</select>
+					<p>Progress code:</p>
+					<textarea id="textarea" name="" cols="30" rows="10"></textarea>
+					<button id="settingsLoadBtn" class='btn'>load saved progress</button>
+					<button id="settingsResetBtn" class='btn'>reset progress</button>
+					<button id="settingsCloseBtn" class='btn'>close settings</button>
+				</div>
+			</div>
 
-        function addToLearnedWords(set, correct) {
-            for (let i = 0; i < set.length; i++) {
-                const cardNum = set[i];
-                const card = dictCards[cardNum];
-                if (!learnedWords.includes(card)) {
-                    card.difficulty = card.lesson * 0.1 + 0.3;
-                    card.difficulty += correct[i] == 1 ? -0.1 : 0.1;
-                    card.daysBetweenReview = 3;
-                    card.date = new Date(new Date().getTime() - (0 * 86399462)).toJSON();
-                    learnedWords.push(card);
-                }
-            }
-            setLocalStorage(JSON.stringify(learnedWords));
-        }
+			<!-- Credits -->
+			<div class="popup" id='creditPopup'>
+				<div class="whitebox">
+					<h4>Code and app design by me</h4>
+					<p>HSK Dictionary data provided by <a href="https://github.com/ReubenBond/HanBaoBao" target="_blank">ReubenBond's app HanBaoBao</a></p>
+					<p>Spaced Repetition Learning algorithm (SM2+) provided by <a href="http://www.blueraja.com/blog/477/a-better-spaced-repetition-learning-algorithm-sm2" target="_blank">BlueRaja</a></p>
+					<p>Text-to-speech provided by <a href="https://texttospeech.io/" target="_blank">https://texttospeech.io/</a></p>
+					<p>The project and the datas provided are presented without licences<br/>
+					Feel free to build upon the project as you wish.</p>
+					<button id="creditCloseBtn" class='btn'>Close credits</button>
+				</div>
+			</div>
 
-        function setLocalStorage(str) {
-            localStorage.setItem('chineseWorkshopFlipCard', str);
-        }
-
-        function checkLocalStorage() {
-            if (localStorage.getItem('chineseWorkshopFlipCard') == null) {
-                localStorage.setItem('chineseWorkshopFlipCard', '[]');
-            }
-            const data = JSON.parse(localStorage.getItem("chineseWorkshopFlipCard"));
-            for (const card of data) {
-                learnedWords.push(card);
-            }
-        }
-
-        function setTTS(word) {
-            const a = `https://texttospeech.responsivevoice.org/v1/text:synthesize?text=${encodeURIComponent(word)}&lang=zh-CN&engine=g1&name=&pitch=0.5&rate=0.5&volume=1&key=PL3QYYuV&gender=female`;
-            if (tts.src != a) tts.src = a;
-        }
-
-        function playTTS(word) {
-            setTTS(word);
-            tts.play();
-        }
-
-        function resetProgress() {
-            localStorage.removeItem("chineseWorkshopFlipCard");
-            location.reload();
-        }
-
-        function loadProgress() {
-            let error = false;
-            let progress = [];
-            try {
-                progress = JSON.parse(atou(textarea.value));
-                if (!checkValidProgress(progress)) throw "parse error";
-                learnedWords = progress;
-                setLocalStorage(JSON.stringify(learnedWords));
-                showInfoPopup("Successfully loaded the saved progress!");
-                checkSRS();
-                updateLearnedWords(learnedWords);
-            } catch (err) {
-                showInfoPopup("Error on loading saved progress!");
-            }
-        }
-
-        function checkValidProgress(progress) {
-            const keys = ["date", "daysBetweenReview", "difficulty", "eng", "lesson", "pinyin", "simplified", "traditional"];
-            for (let i = 0; i < progress.length; i++) {
-                const word = progress[i];
-                const key = Object.keys(word).sort();
-                for (let j = 0; j < keys.length; j++) {
-                    if (key[j] != keys[j]) return false;
-                }
-                const val = Object.values(word);
-                if (val.length !== 8) return false;
-                if (val[0][0].charCodeAt() <= 122 && val[1][0].charCodeAt() <= 122) return false;
-                if (typeof val[2] != "string") return false;
-                if (typeof val[3] != "string") return false;
-                if (typeof val[4] != "string" && val[4].length != 1) return false;
-                if (typeof val[5] != "number") return false;
-                if (typeof val[6] != "number") return false;
-                if (typeof val[7] != "string") return false;
-                if (isNaN(new Date(val[7]).valueOf())) return false;
-            }
-            return true;
-        }
-
-        function runSRS() {
-            if (weightedCardSet.length > 0) {
-                srsIndex = 0;
-                srsProgress.value = 0;
-                srsProgress.max = weightedCardSet.length;
-                getSRSCard(weightedCardSet, srsFrontCard, srsBackCard);
-                openClose(true, srsPopup);
-            } else {
-                showInfoPopup("No words to study for today!");
-            }
-        }
-
-        function checkSRS() {
-            weightedCardSet = getWeightCards(learnedWords);
-            if (weightedCardSet.length > 0) {
-                const l = weightedCardSet.length;
-                document.getElementById('srsInfo').innerHTML = `There are ${l > 1 ? l + " words" : l + " word"} to review! Do SRS!`;
-            } else {
-                document.getElementById('srsInfo').innerHTML = "Nothing to review today!";
-            }
-        }
-
-        function showInfoPopup(msg, timer = 2400) {
-            if (infoCanShow) {
-                infoCanShow = false;
-                infoPopup.children[0].children[0].innerHTML = msg;
-                openClose(true, infoPopup);
-                setTimeout(() => {
-                    openClose(false, infoPopup);
-                    infoCanShow = true;
-                }, timer);
-            }
-        }
-
-        function getWeightCards(set) {
-            const cards = [];
-            const timeNow = new Date().getTime();
-            for (let i = 0; i < set.length; i++) {
-                if (timeNow - new Date(set[i].date).getTime() >= set[i].daysBetweenReview * 86399462) {
-                    cards.push(i);
-                }
-            }
-            return cards;
-        }
-
-        function getSRSCard(set, front, back) {
-            if (srsIndex == set.length) {
-                showInfoPopup(`Finished reviewing ${set.length} words!<br/>Successfully updated weighting of learned words!`);
-                setTimeout(() => {
-                    openClose(false, srsPopup);
-                    setLocalStorage(JSON.stringify(learnedWords));
-                }, 1500);
-                return;
-            }
-            const timeNow = new Date().getTime();
-            const cardNum = set[srsIndex];
-            const card = learnedWords[cardNum];
-            front.innerHTML = `
-                <p>${card.pinyin}</p>
-                <p>${chineseAlpha.value == 'simplified' ? card.simplified : card.traditional}</p>
-            `;
-            back.innerHTML = `
-                <p>${card.pinyin}</p>
-                <p>${card.eng}</p>
-            `;
-            playTTS(card.simplified);
-            checkPinyin(1);
-            const chooseBtnWrapper = document.getElementById("srsDivAnswers");
-            toggleAnimate(bigCard, 'animate-2');
-            toggleAnimate(chooseBtnWrapper, 'animate-3');
-            chooseBtnWrapper.innerHTML = '';
-            for (btn of ['Ez peazy!', 'Maybe?', 'I forgot...']) {
-                const choiceBtn = document.createElement('button');
-                choiceBtn.innerHTML = btn;
-                setTimeout(() => choiceBtn.value = 'canClick', 900);
-                choiceBtn.onclick = function() {
-                    if (this.value == "canClick") {
-                        this.classList.toggle('active');
-                        srsBigCard.classList.toggle('flipped');
-                        for (dom of chooseBtnWrapper.children) {
-                            dom.disabled = true;
-                        }
-                        this.style.boxShadow = '0 0 10px 10px rgb(255,230,230)';
-                        this.style.backgroundColor = 'white';
-                        srsProgress.value++;
-                        let percentOverdue = 0;
-                        let days = Math.floor((new Date().getTime() - new Date(card.date).getTime()) / 86399462);
-                        let performanceRating = 0.6;
-                        if (this.innerText == 'Ez peazy!') {
-                            percentOverdue = Math.min(2, days / card.daysBetweenReview);
-                            performanceRating = 1;
-                        } else if (this.innerText == "I forgot...") {
-                            percentOverdue = 1;
-                            performanceRating = 0.2;
-                        }
-                        card.difficulty += clampNumber(percentOverdue * 1 / 17 * (8 - 9 * performanceRating), 0, 1);
-                        let difficultyWeight = 3 - 1.7 * card.difficulty;
-                        let daysBetweenReview = 1 + (difficultyWeight - 1) * percentOverdue;
-                        if (this.innerText == "I forgot...") {
-                            daysBetweenReview = Math.max(1, 1 / Math.pow(difficultyWeight, 2));
-                        }
-                        card.daysBetweenReview *= daysBetweenReview;
-                        card.date = new Date().toJSON();
-                        setTimeout(() => {
-                            if (srsBigCard.classList.contains('flipped')) srsBigCard.classList.remove('flipped');
-                            setTimeout(() => {
-                                srsIndex++;
-                                getSRSCard(set, front, back);
-                            }, 1500);
-                        }, 1500);
-                    }
-                };
-                chooseBtnWrapper.appendChild(choiceBtn);
-            }
-        }
-
-        function study() {
-            openClose(true, studyPopup);
-            studyIndex = 0;
-            progress.value = 0;
-            correct = Array(9).fill(0);
-            getCard(shuffle(cardSets), frontCard, backCard);
-        }
-
-        function showResult(set, correct) {
-            studyResults.children[0].innerHTML = "";
-            for (let i = 0; i < set.length; i++) {
-                const card = dictCards[set[i]];
-                studyResults.children[0].innerHTML += `
-                    <ul>
-                        <li style="color: ${correct[i] == 1 ? '#43ff43' : '#ff3b3b'};">[${chineseAlpha.value == 'simplified' ? card.simplified : card.traditional}] [${card.pinyin}]</li>
-                        <li>${card.eng}</li>
-                    </ul>
-                `;
-            }
-            openClose(true, studyResults);
-            setTimeout(() => {
-                openClose(false, studyPopup);
-                addToLearnedWords(set, correct);
-            }, 600);
-        }
-
-        function checkPinyin(type = 0) {
-            if (type == 0) {
-                if (pinyinToggle.checked) {
-                    frontCard.children[0].classList.add("hidePinyin");
-                } else {
-                    frontCard.children[0].classList.remove("hidePinyin");
-                }
-            } else {
-                if (srsPinyinToggle.checked) {
-                    srsFrontCard.children[0].classList.add("hidePinyin");
-                } else {
-                    srsFrontCard.children[0].classList.remove("hidePinyin");
-                }
-            }
-        }
-
-        function getCard(set, front, back) {
-            if (studyIndex == set.length) {
-                showInfoPopup("Finished studying! New words added!");
-                setTimeout(() => {
-                    showResult(set, correct);
-                }, 500);
-                return;
-            }
-            const cardNum = set[studyIndex];
-            const card = dictCards[cardNum];
-            front.innerHTML = `
-                <p>${card.pinyin}</p>
-                <p>${chineseAlpha.value == 'simplified' ? card.simplified : card.traditional}</p>
-            `;
-            back.innerHTML = `
-                <p>${card.pinyin}</p>
-                <p>${card.eng}</p>
-            `;
-            checkPinyin();
-            let options = shuffle(set);
-            options.length = 3;
-            if (!options.includes(cardNum)) {
-                options.pop();
-                options.push(cardNum);
-            }
-            // 移除播放发音
-            options = shuffle(options);
-            const optionBtnWrapper = document.getElementById("divAnswers");
-            canFlip = false;
-            toggleAnimate(bigCard, 'animate-2');
-            toggleAnimate(optionBtnWrapper, 'animate-3');
-            setTimeout(() => canFlip = true, 700);
-            optionBtnWrapper.innerHTML = '';
-            for (n of options) {
-                const answerBtn = document.createElement('button');
-                answerBtn.innerHTML = dictCards[n].eng;
-                setTimeout(() => answerBtn.value = 'canClick', 900);
-                answerBtn.onclick = function() {
-                    if (this.value == "canClick") {
-                        let count = 0;
-                        this.classList.toggle('active');
-                        this.disabled = true;
-                        if (this.innerHTML == backCard.children[1].innerHTML) {
-                            for (dom of optionBtnWrapper.children) {
-                                if (dom.disabled == true) count++;
-                                dom.disabled = true;
-                            }
-                            canFlip = false;
-                            correct[studyIndex] = (count > 1) ? 0 : 1;
-                            this.style.boxShadow = '0 0 10px 10px rgb(255,230,230)';
-                            this.style.backgroundColor = 'white';
-                            setTimeout(() => {
-                                if (bigCard.classList.contains('flipped')) bigCard.classList.remove('flipped');
-                                progress.value++;
-                                studyIndex++;
-                                getCard(set, front, back);
-                            }, 700);
-                        } else {
-                            this.style.backgroundColor = 'rgba(0,0,0,0.5)';
-                        }
-                    }
-                };
-                optionBtnWrapper.appendChild(answerBtn);
-            }
-        }
-
-        function getMainCardData() {
-            const allCards = document.getElementsByClassName('cards');
-            for (let i = 0; i < allCards.length; i++) {
-                allCards[i].onclick = function() { mainFlip(this); };
-            }
-        }
-
-        function mainFlip(dom) {
-            toggleAnimate(dom, 'cardsFlip', 100);
-            dom.onclick = function() {};
-            setTimeout(function() {
-                dom.onclick = () => mainFlip(dom);
-            }, 1000);
-        }
-
-        function addCards(arr, output) {
-            output.innerHTML = '';
-            for (x of arr) {
-                let card = document.createElement('div');
-                card.className = 'cards';
-                card.innerHTML = `
-                    <p>${dictCards[x].pinyin}</p>
-                    <p>${chineseAlpha.value == 'simplified' ? dictCards[x].simplified : dictCards[x].traditional}</p>
-                    <p>${dictCards[x].eng}</p>
-                `;
-                output.appendChild(card);
-            }
-            getMainCardData();
-        }
-
-        function randint(min, max) {
-            return Math.floor(Math.random() * (max - min + 1)) + min;
-        }
-
-        function shuffle(arr) {
-            return arr.map(x => x).sort(() => Math.random() - 0.5);
-        }
-
-        function clampNumber(num, a, b) {
-            return Math.max(Math.min(num, Math.max(a, b)), Math.min(a, b));
-        }
-
-        function utoa(str) {
-            return window.btoa(unescape(encodeURIComponent(str)));
-        }
-
-        function atou(str) {
-            return decodeURIComponent(escape(window.atob(str)));
-        }
-
-        function menyChange(meny, force = false) {
-            for (let v of [home, test, list]) {
-                v.classList.remove('active');
-            }
-            for (let i = 1; i <= 3; i++) {
-                document.getElementById(`page${i}`).style.display = 'none';
-                document.getElementById("bodyWrapper").children[0].style.display = 'none';
-            }
-            meny.classList.add('active');
-            if (meny.name == 1) {
-                if (!force) window.history.replaceState({page:'home'}, 'home');
-                document.getElementById(`page${meny.name}`).style.display = 'flex';
-                document.getElementById("bodyWrapper").children[0].style.display = 'block';
-                openClose(false, lessonPopup);
-                openClose(false, studyPopup);
-            } else if (meny.name == 2) {
-                if (!force) window.history.replaceState({page:'test'}, 'test');
-                checkSRS();
-                openClose(false, srsPopup);
-                openClose(false, settingsPopup);
-                openClose(false, creditPopup);
-            } else if (meny.name == 3) {
-                if (!force) window.history.replaceState({page:'list'}, 'list');
-                updateLearnedWords(learnedWords);
-            }
-            document.getElementById(`page${meny.name}`).style.display = 'block';
-        }
-
-        function toggleAnimate(dom, animateName, time = 1400) {
-            dom.classList.toggle(animateName);
-            setTimeout(() => {
-                dom.classList.toggle(animateName);
-            }, time);
-        }
-
-        function getCategory(arrDom, output) {
-            elvl.innerHTML = 'Chinese Workshop';
-            dictCards = [];
-            for (let i = 0; i < arrDom.length; i++) {
-                if (arrDom[i].checked) {
-                    let value = arrDom[i].value;
-                    elvl.innerHTML += `-Lesson${value}`;
-                    let dict = eval(`hsk${value}`);
-                    for (let i = 0; i < dict.length; i++) {
-                        let entry = dict[i].split("\t");
-                        let eng = entry.splice(4, entry.length).join(' ');
-                        dictCards.push({simplified: entry[0], traditional: entry[1], pinyin: entry[3], eng: eng, lesson: value});
-                    }
-                }
-            }
-            if (dictCards.length == 0) {
-                arrDom[0].checked = true;
-                elvl.innerHTML += `-Lesson${arrDom[0].value}`;
-                let dict = hsk1;
-                for (let i = 0; i < dict.length; i++) {
-                    let entry = dict[i].split("\t");
-                    let eng = entry.splice(4, entry.length).join(' ');
-                    dictCards.push({simplified: entry[0], traditional: entry[1], pinyin: entry[3], eng: eng, lesson: arrDom[0].value});
-                }
-            }
-        }
-
-        function getCards(list, n, index = true) {
-            let set = new Set();
-            while (set.size < n) {
-                if (index) {
-                    set.add(randint(0, list.length - 1));
-                } else {
-                    set.add(list[randint(0, list.length - 1)]);
-                }
-            }
-            return Array.from(set);
-        }
-
-        function openClose(bool, dom, animateType = 1) {
-            if (bool) {
-                dom.style.visibility = 'visible';
-                dom.style.opacity = '1';
-                if (animateType !== 0) {
-                    for (let i = 0; i < dom.childElementCount; i++) {
-                        toggleAnimate(dom.children[i], `animate-${animateType}`);
-                    }
-                }
-            } else {
-                dom.style.visibility = 'hidden';
-                dom.style.opacity = '0';
-            }
-        }
-    </script>
-</head>
-<body>
-    <div id="loader">
-        <div id="audio"></div>
-        <div class="spinner" preload></div>
-    </div>
-    <div id="bodyWrapper">
-        <header>
-            <button id="elvl">Chinese Workshop</button>
-        </header>
-        <main>
-            <div id="page1">
-                <div class="cardsMain">
-                    <div id="cardDiv"></div>
-                    <div>
-                        <a id="refreshCards">change cards</a>
-                        <button class="btn" id="mainStudyBtn">Study</button>
-                    </div>
-                </div>
-            </div>
-            <div id="page2">
-                <div class="review">
-                    <div class="roundCircle" id="SRS">
-                        <h2>SRS</h2>
-                    </div>
-                    <div class="srsInfo">
-                        <h4 id="srsInfo">Nothing for today!</h4>
-                    </div>
-                    <div class="settings">
-                        <button class="btn" id="settingsBtn">Settings</button>
-                        <button class="btn" id="creditBtn">Credit</button>
-                        <button class="btn" id="checkUpdateBtn">Check for update</button>
-                    </div>
-                </div>
-            </div>
-            <div id="page3">
-                <h3 id="wordsLearned">Words Learned:</h3>
-                <div id="listWords">
-                    <div><p class="lwp">Lesson1</p><div class="lwhsk"></div></div>
-                    <div><p class="lwp">Lesson2</p><div class="lwhsk"></div></div>
-                    <div><p class="lwp">Lesson3</p><div class="lwhsk"></div></div>
-                    <div><p class="lwp">Lesson4</p><div class="lwhsk"></div></div>
-                    <div><p class="lwp">Lesson5</p><div class="lwhsk"></div></div>
-                    <div><p class="lwp">Lesson6</p><div class="lwhsk"></div></div>
-                    <div><p class="lwp">Lesson7</p><div class="lwhsk"></div></div>
-                    <div><p class="lwp">Lesson8</p><div class="lwhsk"></div></div>
-                    <div><p class="lwp">Lesson9</p><div class="lwhsk"></div></div>
-                    <div><p class="lwp">Lesson10</p><div class="lwhsk"></div></div>
-                    <div><p class="lwp">Lesson11</p><div class="lwhsk"></div></div>
-                    <div><p class="lwp">Lesson12</p><div class="lwhsk"></div></div>
-                </div>
-            </div>
-        </main>
-        <footer>
-            <button name="1" id="home" class="active"><i>🏠</i></button>
-            <button name="2" id="test"><i>📚</i></button>
-            <button name="3" id="list"><i>📜</i></button>
-        </footer>
-
-        <div class="popup" id="lessonPopup">
-            <div>
-                <h4>Choose Flipcards from lessons</h4>
-                <p><input type="checkbox" name="lesson-1" id="lesson1" value="1" checked><label for="lesson1">Lesson1</label></p>
-                <p><input type="checkbox" name="lesson-2" id="lesson2" value="2"><label for="lesson2">Lesson2</label></p>
-                <p><input type="checkbox" name="lesson-3" id="lesson3" value="3"><label for="lesson3">Lesson3</label></p>
-                <p><input type="checkbox" name="lesson-4" id="lesson4" value="4"><label for="lesson4">Lesson4</label></p>
-                <p><input type="checkbox" name="lesson-5" id="lesson5" value="5"><label for="lesson5">Lesson5</label></p>
-                <p><input type="checkbox" name="lesson-6" id="lesson6" value="6"><label for="lesson6">Lesson6</label></p>
-                <p><input type="checkbox" name="lesson-7" id="lesson7" value="7"><label for="lesson7">Lesson7</label></p>
-                <p><input type="checkbox" name="lesson-8" id="lesson8" value="8"><label for="lesson8">Lesson8</label></p>
-                <p><input type="checkbox" name="lesson-9" id="lesson9" value="9"><label for="lesson9">Lesson9</label></p>
-                <p><input type="checkbox" name="lesson-10" id="lesson10" value="10"><label for="lesson10">Lesson10</label></p>
-                <p><input type="checkbox" name="lesson-11" id="lesson11" value="11"><label for="lesson11">Lesson11</label></p>
-                <p><input type="checkbox" name="lesson-12" id="lesson12" value="12"><label for="lesson12">Lesson12</label></p>
-            </div>
-            <br>
-            <button id="lessonButton" class="btn">Confirm</button>
-        </div>
-
-        <div class="popup" id="studyResults">
-            <div></div>
-            <button id="resultButton" class="btn">Done</button>
-        </div>
-
-        <div class="popup" id="study">
-            <header class="popupHeader">
-                <div>
-                    <p><a id="eback"><i>⬅</i> return</a></p>
-                    <p>
-                        <span style="position: relative; top: -16px; right: 5px;">Show pinyin</span>
-                        <label class="switch">
-                            <input type="checkbox" id="pinyinToggle" name="pinyinToggle">
-                            <span class="slider round"></span>
-                        </label>
-                    </p>
-                </div>
-            </header>
-            <div id="eflip">
-                <div id="bigCard" class="bigCard">
-                    <div id="front" class="front">
-                        <p>gǒu</p>
-                        <p>狗</p>
-                    </div>
-                    <div id="back" class="back">
-                        <p>gǒu</p>
-                        <p>dog</p>
-                    </div>
-                </div>
-            </div>
-            <span style="margin: 20px;">click to flip</span>
-            <br><br>
-            <div style="justify-content: center; display: flex; width: 93%;">
-                <div id="divAnswers" class="studyBtn">
-                    <button>A1</button>
-                    <button>A2</button>
-                    <button>A3</button>
-                </div>
-            </div>
-            <progress id="progress" value="0" max="9"></progress>
-        </div>
-
-        <div class="popup" id="srsPopup">
-            <header class="popupHeader">
-                <div>
-                    <p><a id="ebackSrs"><i>⬅</i>return</a></p>
-                    <p>
-                        <span style="position: relative; top: -16px; right: 5px;">Show pinyin</span>
-                        <label class="switch">
-                            <input type="checkbox" id="srsPinyinToggle" name="srsPinyinToggle">
-                            <span class="slider round"></span>
-                        </label>
-                    </p>
-                </div>
-            </header>
-            <div id="eSrs">
-                <div id="srsBigCard" class="bigCard">
-                    <div id="srsFront" class="front">
-                        <p>gǒu</p>
-                        <p>狗</p>
-                    </div>
-                    <div id="srsBack" class="back">
-                        <p>gǒu</p>
-                        <p>dog</p>
-                    </div>
-                </div>
-            </div>
-            <span style="margin: 20px;">choose how well you remember</span>
-            <br><br>
-            <div style="justify-content: center; display: flex; width: 93%;">
-                <div id="srsDivAnswers" class="studyBtn">
-                    <button>Easy</button>
-                    <button>Good</button>
-                    <button>Bad</button>
-                </div>
-            </div>
-            <progress id="srsProgress" value="0" max="9"></progress>
-        </div>
-
-        <div class="popup" id="settingsPopup">
-            <div class="whitebox">
-                <h4>Chinese character writing:</h4>
-                <select id="chineseAlpha" name="chineseAlpha">
-                    <option value="simplified" selected>Simplified</option>
-                    <option value="traditional">Traditional</option>
-                </select>
-                <p>Progress code:</p>
-                <textarea id="textarea" name="" cols="30" rows="10"></textarea>
-                <button id="settingsLoadBtn" class="btn">load saved progress</button>
-                <button id="settingsResetBtn" class="btn">reset progress</button>
-                <button id="settingsCloseBtn" class="btn">close settings</button>
-            </div>
-        </div>
-
-        <div class="popup" id="creditPopup">
-            <div class="whitebox">
-                <h4>Code and app design by me</h4>
-                <p>Dictionary data provided by [Your Source]</p>
-                <p>Spaced Repetition Learning algorithm (SM2+) provided by <a href="http://www.blueraja.com/blog/477/a-better-spaced-repetition-learning-algorithm-sm2" target="_blank">BlueRaja</a></p>
-                <p>Text-to-speech provided by <a href="https://texttospeech.io/" target="_blank">https://texttospeech.io/</a></p>
-                <p>The project and the datas provided are presented without licences<br/>
-                Feel free to build upon the project as you wish.</p>
-                <button id="creditCloseBtn" class="btn">Close credits</button>
-            </div>
-        </div>
-
-        <div class="popup" id="resetPopup">
-            <div class="whitebox">
-                <h4>Do you really want to reset your progress?</h4>
-                <button id="resetConfirmBtn" class="btn">Confirm</button>
-                <button id="resetCloseBtn" class="btn">Return</button>
-            </div>
-        </div>
-        <audio id="tts" src="https://texttospeech.responsivevoice.org/v1/text:synthesize?text=%E7%8B%97&lang=zh-CN&engine=g1&name=&pitch=0.5&rate=0.5&volume=1&key=PL3QYYuV&gender=female"></audio>
-        <div class="popup" id="infoPopup">
-            <div class="whitebox">
-                <h4>Successfully updated learned words!</h4>
-            </div>
-        </div>
-    </div>
-    <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9229266d3ce7676f',t:'MTc0MjM0NzI1NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'922953439cc51373',t:'MTc0MjM0OTA5Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
-</body>
+			<!-- reset prompt popup -->
+			<div class="popup" id='resetPopup'>
+				<div class="whitebox">
+					<h4>Do you really want to reset your progress?</h4>
+					<button id="resetConfirmBtn" class='btn'>Confirm</button>
+					<button id="resetCloseBtn" class='btn'>Return</button>
+				</div>
+			</div>
+			<audio id="tts" src="https://texttospeech.responsivevoice.org/v1/text:synthesize?text=%E7%8B%97&lang=zh-CN&engine=g1&name=&pitch=0.5&rate=0.5&volume=1&key=PL3QYYuV&gender=female"></audio>
+			<!-- info popup -->
+			<div class="popup" id='infoPopup'>
+				<div class="whitebox">
+					<h4>Successfully updated learned words!</h4>
+				</div>
+			</div>
+		</div>
+	</body>
 </html>
